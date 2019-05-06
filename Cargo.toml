@@ -1,0 +1,12 @@
+[package]
+name = "langtons_ant"
+version = "0.1.0"
+authors = ["IO"]
+edition = "2018"
+
+[dependencies]
+rand = "*"
+
+[dependencies.sdl2]
+version = "*"
+features = ["bundled", "static-link"]
