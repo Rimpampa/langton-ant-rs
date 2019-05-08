@@ -62,14 +62,13 @@ pub struct AntMap {
 }
 
 impl AntMap {
-    pub fn new(width: usize, height: usize, looking: Direction, stages: Vec<Rotation>) -> AntMap {
+    pub fn new(width: usize, height: usize, looking: Direction, rots: Vec<Rotation>) -> AntMap {
         AntMap {
             ant: (width / 2, height / 2, looking),
-            map: iter::repeat(iter::repeat(0).take(height).collect()).take(width).collect(),
+            map: vec![vec![0; height]; width],
             width,
             height,
-
-            rots: stages,
+            rots,
         }
     }
 
