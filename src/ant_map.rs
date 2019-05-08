@@ -89,24 +89,13 @@ impl AntMap {
     }
 
     pub fn step_ahead(&mut self) -> bool {
-
         match self.ant.2 {
-            Go::Up => if self.ant.1 > 0 {
-                    self.ant.1 -= 1;
-                } else { return false },
-            
-            Go::Down => if self.ant.1 < self.height - 1 {
-                    self.ant.1 += 1;
-                } else { return false },
-            
-            Go::Left => if self.ant.0 > 0 {
-                    self.ant.0 -= 1;
-                } else { return false },
-            
-            Go::Right => if self.ant.0 < self.width - 1 {
-                    self.ant.0 += 1;
-                } else { return false },
-        };
+            Go::Up    if self.ant.1 > 0               => self.ant.1 -= 1,
+            Go::Down  if self.ant.1 < self.height - 1 => self.ant.1 += 1,
+            Go::Left  if self.ant.0 > 0               => self.ant.0 -= 1,
+            Go::Right if self.ant.0 < self.width - 1  => self.ant.0 += 1,
+            _ => return false,
+        }
 
         let pos = &mut self.map[self.ant.0][self.ant.1];
       
