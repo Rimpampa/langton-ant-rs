@@ -109,9 +109,11 @@ impl AntMap {
         };
 
         let pos = &mut self.map[self.ant.0][self.ant.1];
-
-        if *pos == self.rots.len() as u32 { *pos = 1; }
-        else { *pos += 1; }
+      
+        *pos += 1;
+        if *pos == self.rots.len() as u32 {
+            *pos = 1;
+        }
 
         let turn = self.rots[*pos as usize - 1];
         self.ant.2.rotate(turn);
