@@ -1,42 +1,23 @@
-
 use std::iter;
 use std::slice::Iter;
 
+#[derive(Clone , Copy)]
 pub enum Direction {
     Up,
     Down,
     Left,
     Right,
 }
+
 use Direction as Go;
 
-impl Clone for Direction {
-    fn clone(&self) -> Direction {
-        match self {
-            Go::Up => Go::Up,
-            Go::Down => Go::Down,
-            Go::Right => Go::Right,
-            Go::Left => Go::Left,
-        }
-    }
-}
-impl Copy for Direction {}
-
+#[derive(Clone, Copy)]
 pub enum Rotation {
     Left,  // counter-clockwise rotation
     Right, // clockwise rotation
 }
-use Rotation as Turn;
 
-impl Clone for Rotation {
-    fn clone(&self) -> Rotation {
-        match self {
-            Turn::Right => Turn::Right,
-            Turn::Left  => Turn::Left,
-        }
-    }
-}
-impl Copy for Rotation {}
+use Rotation as Turn;
 
 impl Rotation {
     pub fn vec_from_string(s: &str) -> Vec<Rotation> {
