@@ -148,8 +148,7 @@ fn main() {
 }
 
 fn add_u8(a: u8, b: u8) -> u8 {
-    let c = a as u16 + b as u16;
-    if c > u8::max_value() as u16 { u8::max_value() } else { c as u8 }
+    a.saturating_add(b)
 }
 
 const THRESHOLD: u8 = 100;
