@@ -89,15 +89,18 @@ impl AntMap {
     }
 
     pub fn step_ahead(&mut self) -> bool {
-        match self.ant.2 {
-            Go::Up    if self.ant.1 > 0               => self.ant.1 -= 1,
-            Go::Down  if self.ant.1 < self.height - 1 => self.ant.1 += 1,
-            Go::Left  if self.ant.0 > 0               => self.ant.0 -= 1,
-            Go::Right if self.ant.0 < self.width - 1  => self.ant.0 += 1,
+        let (ref mut col, ref mut row, dir) = self.ant;
+        let (height, width) = (self.height, self.width);
+        
+        match dir {
+            Go::Up    if *row > 0          => *row -= 1,
+            Go::Down  if *row < height - 1 => *row += 1,
+            Go::Left  if *col > 0          => *col -= 1,
+            Go::Right if *col < width - 1  => *col += 1,
             _ => return false,
         }
 
-        let pos = &mut self.map[self.ant.0][self.ant.1];
+        let pos = &mut self.map[*col][*row];
       
         *pos += 1;
         if *pos == self.rots.len() as u32 {
