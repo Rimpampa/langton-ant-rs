@@ -103,7 +103,7 @@ impl AntMap {
         let pos = &mut self.map[*col][*row];
       
         *pos += 1;
-        if *pos == self.rots.len() as u32 {
+        if *pos > self.rots.len() as u32 {
             *pos = 1;
         }
 
