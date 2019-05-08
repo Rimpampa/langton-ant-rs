@@ -138,17 +138,16 @@ impl AntMap {
         let mut left = self.width / 2;
         let mut right = self.width / 2 + 1;
 
-        self.map.iter_mut().enumerate().for_each(|(x, v)| {
-            v.iter_mut().enumerate().for_each(|(y, v)| {
-                if *v != 0 {
-                    if y < up { up = y; }
-                    else if y > down { down = y; }
-                    
-                    if x < left { left = x; }
-                    else if x > right { right = x; }
+        for (x, col) in self.map.iter().enumerate() {
+            for (y, &v) in col.iter().enumerate() {
+                if v != 0 {
+                    up = up.min(y);
+                    down = down.max(y);
+                    left = left.min(x);
+                    right = right.max(x);
                 }
-            })
-        });
+            }
+        }
 
         self.map = self.map.iter().skip(left).take(right - left + 1).map(|v| {
             v.iter().skip(up).take(down - up + 1).map(|v| *v).collect()
