@@ -29,6 +29,15 @@ impl Rotation {
             })
             .collect()
     }
+    
+    pub fn invert(&mut self) {
+        use Rotation::*;
+        
+        *self = match *self {
+            Left => Right,
+            Right => Left,
+        }
+    }
 }
 
 pub struct AntMap {
@@ -109,10 +118,7 @@ impl AntMap {
     }
 
     pub fn invert_rotation(&mut self, index: usize) {
-        self.rots[index] = match self.rots[index] {
-            Turn::Left => Turn::Right,
-            Turn::Right => Turn::Left,
-        }
+        self.rots[index].invert()
     }
 
     pub fn add_stage(&mut self, turn: Rotation) { self.rots.push(turn); }
