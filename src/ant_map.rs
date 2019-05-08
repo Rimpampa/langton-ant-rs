@@ -1,4 +1,3 @@
-use std::iter;
 use std::slice::Iter;
 
 #[derive(Clone , Copy)]
@@ -73,13 +72,14 @@ impl AntMap {
     }
 
     pub fn scale(&mut self, amount: usize) {
-
-        self.map = iter::repeat(iter::repeat(0).take(amount * 2 + self.height).collect()).take(amount)
-        .chain(self.map.iter().map(|v| iter::repeat(0).take(amount)
-            .chain(v.iter().map(|v| *v)
-                .chain(iter::repeat(0).take(amount))
-            ).collect())
-        ).chain(iter::repeat(iter::repeat(0).take(amount * 2 + self.height).collect()).take(amount)).collect();
+        for col in &mut self.map {
+            col.extend((0..amount * 2).map(|_| 0));
+            col.rotate_right(amount);
+        }
+        
+        let new_width = self.width + amount * 2;
+        self.map.extend((0..amount * 2).map(|_| vec![0; new_width]));
+        self.map.rotate_right(amount);
         
         self.height += amount * 2;
         self.width += amount * 2;
