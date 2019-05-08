@@ -3,18 +3,30 @@ use std::slice::Iter;
 
 #[derive(Clone , Copy)]
 pub enum Direction {
-    Up,
+    Up = 0,
+    Right,
     Down,
     Left,
-    Right,
 }
 
 use Direction as Go;
 
+impl Direction {
+    pub fn rotated(self, rot: Rotation) -> Self {
+        use Direction::*;
+        
+        [Up, Right, Down, Left][(self as usize + rot as usize) % 4]
+    }
+    
+    pub fn rotate(&mut self, rot: Rotation) {
+        *self = self.rotated(rot);
+    }
+}
+
 #[derive(Clone, Copy)]
 pub enum Rotation {
-    Left,  // counter-clockwise rotation
-    Right, // clockwise rotation
+    Left = 3,  // counter-clockwise rotation
+    Right = 1, // clockwise rotation
 }
 
 use Rotation as Turn;
@@ -102,17 +114,8 @@ impl AntMap {
         if *pos == self.rots.len() as u32 { *pos = 1; }
         else { *pos += 1; }
 
-        self.ant.2 = match (&self.ant.2, &self.rots[*pos as usize - 1]) {
-            (Go::Up,    Turn::Left ) => Go::Left,
-            (Go::Down,  Turn::Left ) => Go::Right,
-            (Go::Left,  Turn::Left ) => Go::Down,
-            (Go::Right, Turn::Left ) => Go::Up,
-
-            (Go::Up,    Turn::Right) => Go::Right,
-            (Go::Down,  Turn::Right) => Go::Left,
-            (Go::Left,  Turn::Right) => Go::Up,
-            (Go::Right, Turn::Right) => Go::Down,
-        };
+        let turn = self.rots[*pos as usize - 1];
+        self.ant.2.rotate(turn);
         
         true
     }
