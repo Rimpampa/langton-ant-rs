@@ -1,51 +1,53 @@
-
-use std::iter;
 use std::slice::Iter;
 
+#[derive(Clone , Copy)]
 pub enum Direction {
-    Up,
+    Up = 0,
+    Right,
     Down,
     Left,
-    Right,
 }
+
 use Direction as Go;
 
-impl Clone for Direction {
-    fn clone(&self) -> Direction {
-        match self {
-            Go::Up => Go::Up,
-            Go::Down => Go::Down,
-            Go::Right => Go::Right,
-            Go::Left => Go::Left,
-        }
+impl Direction {
+    pub fn rotated(self, rot: Rotation) -> Self {
+        use Direction::*;
+        
+        [Up, Right, Down, Left][(self as usize + rot as usize) % 4]
+    }
+    
+    pub fn rotate(&mut self, rot: Rotation) {
+        *self = self.rotated(rot);
     }
 }
-impl Copy for Direction {}
 
+#[derive(Clone, Copy)]
 pub enum Rotation {
-    Left,  // counter-clockwise rotation
-    Right, // clockwise rotation
+    Left = 3,  // counter-clockwise rotation
+    Right = 1, // clockwise rotation
 }
-use Rotation as Turn;
 
-impl Clone for Rotation {
-    fn clone(&self) -> Rotation {
-        match self {
-            Turn::Right => Turn::Right,
-            Turn::Left  => Turn::Left,
-        }
-    }
-}
-impl Copy for Rotation {}
+use Rotation as Turn;
 
 impl Rotation {
     pub fn vec_from_string(s: &str) -> Vec<Rotation> {
-        let mut v = Vec::<Rotation>::with_capacity(s.len());
-        for c in s.chars() {
-            if c == 'R' { v.push(Turn::Right); }
-            else if c == 'L' { v.push(Turn::Left); }
+        s.chars()
+            .flat_map(|c| match c {
+                'R' => Some(Turn::Right),
+                'L' => Some(Turn::Left),
+                _ => None,
+            })
+            .collect()
+    }
+    
+    pub fn invert(&mut self) {
+        use Rotation::*;
+        
+        *self = match *self {
+            Left => Right,
+            Right => Left,
         }
-        v
     }
 }
 
@@ -59,25 +61,25 @@ pub struct AntMap {
 }
 
 impl AntMap {
-    pub fn new(width: usize, height: usize, looking: Direction, stages: Vec<Rotation>) -> AntMap {
+    pub fn new(width: usize, height: usize, looking: Direction, rots: Vec<Rotation>) -> AntMap {
         AntMap {
             ant: (width / 2, height / 2, looking),
-            map: iter::repeat(iter::repeat(0).take(height).collect()).take(width).collect(),
+            map: vec![vec![0; height]; width],
             width,
             height,
-
-            rots: stages,
+            rots,
         }
     }
 
     pub fn scale(&mut self, amount: usize) {
-
-        self.map = iter::repeat(iter::repeat(0).take(amount * 2 + self.height).collect()).take(amount)
-        .chain(self.map.iter().map(|v| iter::repeat(0).take(amount)
-            .chain(v.iter().map(|v| *v)
-                .chain(iter::repeat(0).take(amount))
-            ).collect())
-        ).chain(iter::repeat(iter::repeat(0).take(amount * 2 + self.height).collect()).take(amount)).collect();
+        for col in &mut self.map {
+            col.extend((0..amount * 2).map(|_| 0));
+            col.rotate_right(amount);
+        }
+        
+        let new_width = self.width + amount * 2;
+        self.map.extend((0..amount * 2).map(|_| vec![0; new_width]));
+        self.map.rotate_right(amount);
         
         self.height += amount * 2;
         self.width += amount * 2;
@@ -87,50 +89,32 @@ impl AntMap {
     }
 
     pub fn step_ahead(&mut self) -> bool {
+        let (ref mut col, ref mut row, dir) = self.ant;
+        let (height, width) = (self.height, self.width);
+        
+        match dir {
+            Go::Up    if *row > 0          => *row -= 1,
+            Go::Down  if *row < height - 1 => *row += 1,
+            Go::Left  if *col > 0          => *col -= 1,
+            Go::Right if *col < width - 1  => *col += 1,
+            _ => return false,
+        }
 
-        match self.ant.2 {
-            Go::Up => if self.ant.1 > 0 {
-                    self.ant.1 -= 1;
-                } else { return false },
-            
-            Go::Down => if self.ant.1 < self.height - 1 {
-                    self.ant.1 += 1;
-                } else { return false },
-            
-            Go::Left => if self.ant.0 > 0 {
-                    self.ant.0 -= 1;
-                } else { return false },
-            
-            Go::Right => if self.ant.0 < self.width - 1 {
-                    self.ant.0 += 1;
-                } else { return false },
-        };
+        let pos = &mut self.map[*col][*row];
+      
+        *pos += 1;
+        if *pos > self.rots.len() as u32 {
+            *pos = 1;
+        }
 
-        let pos = &mut self.map[self.ant.0][self.ant.1];
-
-        if *pos == self.rots.len() as u32 { *pos = 1; }
-        else { *pos += 1; }
-
-        self.ant.2 = match (&self.ant.2, &self.rots[*pos as usize - 1]) {
-            (Go::Up,    Turn::Left ) => Go::Left,
-            (Go::Down,  Turn::Left ) => Go::Right,
-            (Go::Left,  Turn::Left ) => Go::Down,
-            (Go::Right, Turn::Left ) => Go::Up,
-
-            (Go::Up,    Turn::Right) => Go::Right,
-            (Go::Down,  Turn::Right) => Go::Left,
-            (Go::Left,  Turn::Right) => Go::Up,
-            (Go::Right, Turn::Right) => Go::Down,
-        };
+        let turn = self.rots[*pos as usize - 1];
+        self.ant.2.rotate(turn);
         
         true
     }
 
     pub fn invert_rotation(&mut self, index: usize) {
-        self.rots[index] = match self.rots[index] {
-            Turn::Left => Turn::Right,
-            Turn::Right => Turn::Left,
-        }
+        self.rots[index].invert()
     }
 
     pub fn add_stage(&mut self, turn: Rotation) { self.rots.push(turn); }
@@ -154,17 +138,16 @@ impl AntMap {
         let mut left = self.width / 2;
         let mut right = self.width / 2 + 1;
 
-        self.map.iter_mut().enumerate().for_each(|(x, v)| {
-            v.iter_mut().enumerate().for_each(|(y, v)| {
-                if *v != 0 {
-                    if y < up { up = y; }
-                    else if y > down { down = y; }
-                    
-                    if x < left { left = x; }
-                    else if x > right { right = x; }
+        for (x, col) in self.map.iter().enumerate() {
+            for (y, &v) in col.iter().enumerate() {
+                if v != 0 {
+                    up = up.min(y);
+                    down = down.max(y);
+                    left = left.min(x);
+                    right = right.max(x);
                 }
-            })
-        });
+            }
+        }
 
         self.map = self.map.iter().skip(left).take(right - left + 1).map(|v| {
             v.iter().skip(up).take(down - up + 1).map(|v| *v).collect()
