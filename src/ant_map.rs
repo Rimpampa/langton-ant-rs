@@ -21,12 +21,13 @@ use Rotation as Turn;
 
 impl Rotation {
     pub fn vec_from_string(s: &str) -> Vec<Rotation> {
-        let mut v = Vec::<Rotation>::with_capacity(s.len());
-        for c in s.chars() {
-            if c == 'R' { v.push(Turn::Right); }
-            else if c == 'L' { v.push(Turn::Left); }
-        }
-        v
+        s.chars()
+            .flat_map(|c| match c {
+                'R' => Some(Turn::Right),
+                'L' => Some(Turn::Left),
+                _ => None,
+            })
+            .collect()
     }
 }
 
